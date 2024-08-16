@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io/fs"
 	"os"
@@ -9,41 +10,46 @@ import (
 	"strings"
 )
 
-var Red = "\033[31m"
-var Green = "\033[32m"
-var Reset = "\033[0m"
-var Yellow = "\033[33m"
+const Red = "\033[31m"
+const Green = "\033[32m"
+const Reset = "\033[0m"
+const Yellow = "\033[33m"
+
+const PROGRESS_BAR_SIZE = 100
+
+var progressTracker []bool
+
+var recursive = flag.Bool("r", false, "Enables recursive search")
 
 func main() {
+	flag.Parse()
 
-	svelte_files, err := getSvelteFiles("./test/app")
-	if err != nil {
-		panic(err)
-	}
+	svelte_files := getSvelteFiles("./test/fe")
 
 	fmt.Println("\nAnalisi di"+Green, len(svelte_files), Reset+"file svelte in corso...")
+	initProgressTracker(len(svelte_files))
 	fmt.Println(Green + "O" + Reset + " = file utilizzato")
-	fmt.Println(Red + "X" + Reset + " = file non utilizzato\n")
+	fmt.Println(Red + "X" + Reset + " = file non utilizzato")
 
-	unusedFiles := getUnusedFiles(svelte_files)
-
-	fmt.Println("\n\nSono stati trovati"+Red, len(unusedFiles), Reset+"file non utilizzati. \n")
-
-	writeErr := writeToFile("unused_files.txt", unusedFiles)
-	if writeErr != nil {
-		fmt.Println("Errore:", err)
+	var unusedFiles []string
+	if *recursive {
+		unusedFiles = getUnusedFilesRecursive(svelte_files)
+	} else {
+		unusedFiles = getUnusedFiles(svelte_files)
 	}
 
-	fmt.Println("Lista dei file inutilizzati in " + Yellow + "unused_files.txt\n\n" + Reset)
+	fmt.Println("\n\nSono stati trovati"+Red, len(unusedFiles), Reset+"file non utilizzati.")
+	writeToFile("unused_files.txt", unusedFiles)
 
+	fmt.Println("\nLista dei file inutilizzati in " + Yellow + "unused_files.txt\n\n" + Reset)
 }
 
-func getSvelteFiles(root string) ([]string, error) {
+func getSvelteFiles(root string) []string {
 	var files []string
 
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return err
+			panic(err)
 		}
 
 		if d.IsDir() {
@@ -58,25 +64,49 @@ func getSvelteFiles(root string) ([]string, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return files, nil
+	return files
+}
+
+func getUnusedFilesRecursive(files []string) []string {
+	unusedFiles := getUnusedFiles(files)
+
+	if len(unusedFiles) > 0 {
+		var updatedFiles []string
+		for _, file := range files {
+			if !contains(unusedFiles, file) {
+				updatedFiles = append(updatedFiles, file)
+			}
+		}
+		unusedFiles = append(unusedFiles, getUnusedFilesRecursive(updatedFiles)...)
+	}
+
+	return unusedFiles
 }
 
 func getUnusedFiles(files []string) []string {
 	var unusedFiles []string
 
 	for i, file := range files {
-		if !isFileUsed(file, files) {
+		isUsed := !isFileUsed(file, files)
+		if isUsed {
 			unusedFiles = append(unusedFiles, file)
 		}
-		if (i+1)%100 == 0 {
-			fmt.Print("\n")
-		}
+		updateProgress(i, len(files), isUsed)
 	}
 
 	return unusedFiles
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }
 
 func isFileUsed(file string, files []string) bool {
@@ -95,7 +125,6 @@ func isFileUsed(file string, files []string) bool {
 		for scanner.Scan() {
 			line := scanner.Text()
 			if strings.Contains(line, currentFile) {
-				fmt.Print(Green + "O" + Reset)
 				f.Close()
 				return true
 			}
@@ -109,24 +138,21 @@ func isFileUsed(file string, files []string) bool {
 			fmt.Println("Errore durante la lettura del file:", scanner.Err())
 		}
 	}
-	fmt.Print(Red + "X" + Reset)
 	return false
 }
 
-func writeToFile(filename string, lines []string) error {
+func writeToFile(filename string, lines []string) {
 
 	file, err := os.Create(filename)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer file.Close()
 
 	for _, line := range lines {
 		_, err := file.WriteString(line + "\n")
 		if err != nil {
-			return err
+			panic(err)
 		}
 	}
-
-	return nil
 }
