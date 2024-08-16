@@ -18,8 +18,10 @@ const Yellow = "\033[33m"
 const PROGRESS_BAR_SIZE = 100
 
 var progressTracker []bool
+var isFirstRecursiveCall = true
 
 var recursive = flag.Bool("r", false, "Enables recursive search")
+var noProgressBar = flag.Bool("np", false, "Disables the progress display (useful when redirecting output)")
 
 func main() {
 	flag.Parse()
@@ -27,7 +29,7 @@ func main() {
 	svelte_files := getSvelteFiles("./test/fe")
 
 	fmt.Println("\nAnalisi di"+Green, len(svelte_files), Reset+"file svelte in corso...")
-	initProgressTracker(len(svelte_files))
+
 	fmt.Println(Green + "O" + Reset + " = file utilizzato")
 	fmt.Println(Red + "X" + Reset + " = file non utilizzato")
 
@@ -35,10 +37,11 @@ func main() {
 	if *recursive {
 		unusedFiles = getUnusedFilesRecursive(svelte_files)
 	} else {
+		fmt.Println("\033[?25l")
 		unusedFiles = getUnusedFiles(svelte_files)
 	}
 
-	fmt.Println("\n\nSono stati trovati"+Red, len(unusedFiles), Reset+"file non utilizzati.")
+	fmt.Println("\n\n\n\nSono stati trovati"+Red, len(unusedFiles), Reset+"file non utilizzati.")
 	writeToFile("unused_files.txt", unusedFiles)
 
 	fmt.Println("\nLista dei file inutilizzati in " + Yellow + "unused_files.txt\n\n" + Reset)
@@ -80,6 +83,7 @@ func getUnusedFilesRecursive(files []string) []string {
 				updatedFiles = append(updatedFiles, file)
 			}
 		}
+		isFirstRecursiveCall = false
 		unusedFiles = append(unusedFiles, getUnusedFilesRecursive(updatedFiles)...)
 	}
 
@@ -90,11 +94,13 @@ func getUnusedFiles(files []string) []string {
 	var unusedFiles []string
 
 	for i, file := range files {
-		isUsed := !isFileUsed(file, files)
-		if isUsed {
+		isUsed := isFileUsed(file, files)
+		if !isUsed {
 			unusedFiles = append(unusedFiles, file)
 		}
-		updateProgress(i, len(files), isUsed)
+		if !*noProgressBar {
+			updateProgress(i, len(files))
+		}
 	}
 
 	return unusedFiles
