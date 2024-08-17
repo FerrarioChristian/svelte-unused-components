@@ -20,16 +20,20 @@ const PROGRESS_BAR_SIZE = 100
 var progressTracker []bool
 var isFirstRecursiveCall = true
 
+var output = flag.String("o", "unused_files.txt", "Specifies the output file for the list of unused files. Defaults to `unused_files.txt`.")
+var directory = flag.String("d", "./src", "Specifies the directory to search for `.svelte` files. Defaults to the `/src` directory")
+var verbose = flag.Bool("v", false, "Enables verbose output. (This will also disable progress display.)")
+var ignored = flag.String("i", "", "Specifies the input file containing a list of files to ignore. Defaults to `ignore_files.txt`.")
 var recursive = flag.Bool("r", false, "Enables recursive search")
 var noProgressBar = flag.Bool("np", false, "Disables the progress display (useful when redirecting output)")
 
 func main() {
 	flag.Parse()
 
-	svelte_files := getSvelteFiles("./test/fe")
+	svelte_files := getSvelteFiles(*directory)
 
 	fmt.Println("\nAnalisi di"+Green, len(svelte_files), Reset+"file svelte in corso...")
-
+	initProgressTracker(len(svelte_files))
 	fmt.Println(Green + "O" + Reset + " = file utilizzato")
 	fmt.Println(Red + "X" + Reset + " = file non utilizzato")
 
@@ -42,9 +46,9 @@ func main() {
 	}
 
 	fmt.Println("\n\n\n\nSono stati trovati"+Red, len(unusedFiles), Reset+"file non utilizzati.")
-	writeToFile("unused_files.txt", unusedFiles)
+	writeToFile(*output, unusedFiles)
 
-	fmt.Println("\nLista dei file inutilizzati in " + Yellow + "unused_files.txt\n\n" + Reset)
+	fmt.Println("\nLista dei file inutilizzati in " + Yellow + *output + "\n\n" + Reset)
 }
 
 func getSvelteFiles(root string) []string {
@@ -80,6 +84,7 @@ func getUnusedFilesRecursive(files []string) []string {
 		var updatedFiles []string
 		for _, file := range files {
 			if !contains(unusedFiles, file) {
+
 				updatedFiles = append(updatedFiles, file)
 			}
 		}
@@ -96,10 +101,15 @@ func getUnusedFiles(files []string) []string {
 	for i, file := range files {
 		isUsed := isFileUsed(file, files)
 		if !isUsed {
+			if *verbose {
+				fmt.Println(Red + file + Reset)
+			}
 			unusedFiles = append(unusedFiles, file)
+		} else if *verbose {
+			fmt.Println(Green + file + Reset)
 		}
-		if !*noProgressBar {
-			updateProgress(i, len(files))
+		if !*noProgressBar && !*verbose {
+			updateProgress(i, len(files), isUsed)
 		}
 	}
 
