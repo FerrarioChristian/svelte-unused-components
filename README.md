@@ -12,7 +12,7 @@ This Go program is designed to analyze `.svelte` files in a directory, identifyi
 
 ## Usage
   
-  Download the latest release from the [releases page]() and place it in the package directory, the program will analyze the `/src` folder.\
+  Download the latest release from the [releases page](https://github.com/FerrarioChristian/svelte-unused-components/releases) and place it in the package directory, the program will analyze the `/src` folder.\
   Then run the executable from the command line with the flags you need.\
   The program will output the list of unused files to the specified output file (defaults to `unused_files.txt`).
 
