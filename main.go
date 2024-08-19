@@ -32,10 +32,13 @@ func main() {
 
 	svelte_files := getSvelteFiles(*directory)
 
-	fmt.Println("\nAnalisi di"+Green, len(svelte_files), Reset+"file svelte in corso...")
-	initProgressTracker(len(svelte_files))
-	fmt.Println(Green + "O" + Reset + " = file utilizzato")
-	fmt.Println(Red + "X" + Reset + " = file non utilizzato")
+	fmt.Println("\nFound"+Green, len(svelte_files), Reset+"svelte files in", *directory)
+	fmt.Println("Analyzing files...")
+	if !*noProgressBar && !*verbose && *recursive {
+		initProgressTracker(len(svelte_files))
+		fmt.Println(Green + "O" + Reset + " = used file")
+		fmt.Println(Red + "X" + Reset + " = unused file")
+	}
 
 	var unusedFiles []string
 	if *recursive {
@@ -45,10 +48,10 @@ func main() {
 		unusedFiles = getUnusedFiles(svelte_files)
 	}
 
-	fmt.Println("\n\n\n\nSono stati trovati"+Red, len(unusedFiles), Reset+"file non utilizzati.")
+	fmt.Println("\n\n"+Red, len(unusedFiles), Reset+"unused files found.")
 	writeToFile(*output, unusedFiles)
 
-	fmt.Println("\nLista dei file inutilizzati in " + Yellow + *output + "\n\n" + Reset)
+	fmt.Println("\nFile list in " + Yellow + *output + "\n" + Reset)
 }
 
 func getSvelteFiles(root string) []string {
@@ -151,7 +154,7 @@ func isFileUsed(file string, files []string) bool {
 		f.Close()
 
 		if scanner.Err() != nil {
-			fmt.Println("Errore durante la lettura del file:", scanner.Err())
+			fmt.Println("Error while reading file:", scanner.Err())
 		}
 	}
 	return false
