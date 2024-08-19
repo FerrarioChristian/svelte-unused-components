@@ -17,7 +17,7 @@ This Go program is designed to analyze `.svelte` files in a directory, identifyi
   The program will output the list of unused files to the specified output file (defaults to `unused_files.txt`).
 
   ```sh
-  ./svelte-unused-files -r
+  ./svelte-unused-components -r
   ```
 
 ## Build and Run
@@ -33,7 +33,7 @@ This Go program is designed to analyze `.svelte` files in a directory, identifyi
     ```
 3. **Run the program**:
     ```sh
-    ./svelte-unused-files -r
+    ./svelte-unused-components -r
     ```
 
 ## License
