@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
+	"svelte-unused-components/fileutils"
 )
 
 const Red = "\033[31m"
@@ -30,10 +31,11 @@ var noProgressBar = flag.Bool("np", false, "Disables the progress display (usefu
 func main() {
 	flag.Parse()
 
-	svelte_files := getSvelteFiles(*directory)
+	svelte_files := fileutils.GetSvelteFilesInDirecory(*directory)
 
 	fmt.Println("\nFound"+Green, len(svelte_files), Reset+"svelte files in", *directory)
 	fmt.Println("Analyzing files...")
+
 	if !*noProgressBar && !*verbose && *recursive {
 		initProgressTracker(len(svelte_files))
 		fmt.Println(Green + "O" + Reset + " = used file")
@@ -49,35 +51,9 @@ func main() {
 	}
 
 	fmt.Println("\n\n"+Red, len(unusedFiles), Reset+"unused files found.")
-	writeToFile(*output, unusedFiles)
+	fileutils.WriteResultsToFile(*output, unusedFiles)
 
 	fmt.Println("\nFile list in " + Yellow + *output + "\n" + Reset)
-}
-
-func getSvelteFiles(root string) []string {
-	var files []string
-
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			panic(err)
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-
-		if filepath.Ext(path) == ".svelte" {
-			files = append(files, path)
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		panic(err)
-	}
-
-	return files
 }
 
 func getUnusedFilesRecursive(files []string) []string {
@@ -86,8 +62,7 @@ func getUnusedFilesRecursive(files []string) []string {
 	if len(unusedFiles) > 0 {
 		var updatedFiles []string
 		for _, file := range files {
-			if !contains(unusedFiles, file) {
-
+			if !slices.Contains(unusedFiles, file) {
 				updatedFiles = append(updatedFiles, file)
 			}
 		}
@@ -117,15 +92,6 @@ func getUnusedFiles(files []string) []string {
 	}
 
 	return unusedFiles
-}
-
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
 }
 
 func isFileUsed(file string, files []string) bool {
@@ -158,20 +124,4 @@ func isFileUsed(file string, files []string) bool {
 		}
 	}
 	return false
-}
-
-func writeToFile(filename string, lines []string) {
-
-	file, err := os.Create(filename)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	for _, line := range lines {
-		_, err := file.WriteString(line + "\n")
-		if err != nil {
-			panic(err)
-		}
-	}
 }
