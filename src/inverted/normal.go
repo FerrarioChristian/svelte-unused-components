@@ -1,11 +1,10 @@
 package inverted
 
 import (
-	"bufio"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
+	"svelte-unused-components/utils"
 )
 
 func getUnusedFilesRecursive(files []string) []string {
@@ -18,7 +17,7 @@ func getUnusedFilesRecursive(files []string) []string {
 				updatedFiles = append(updatedFiles, file)
 			}
 		}
-		unusedFiles = append(unusedFiles, getUnusedFiles(updatedFiles)...)
+		unusedFiles = append(unusedFiles, getUnusedFilesRecursive(updatedFiles)...)
 	}
 
 	return unusedFiles
@@ -31,7 +30,7 @@ func getUnusedFiles(files []string) []string {
 		if strings.HasPrefix(filepath.Base(file), "+") {
 			usedMap[file] = true
 		}
-		lines := readFileLines(file)
+		lines := utils.ReadFileLines(file)
 
 		for _, line := range lines {
 			for _, candidate := range files {
@@ -50,28 +49,4 @@ func getUnusedFiles(files []string) []string {
 		}
 	}
 	return unusedFiles
-}
-
-func readFileLines(file string) []string {
-	var lines []string
-	f, err := os.Open(file)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, "</script>") {
-			break
-		}
-		lines = append(lines, line)
-	}
-
-	if err := scanner.Err(); err != nil {
-		panic(err)
-	}
-
-	return lines
 }

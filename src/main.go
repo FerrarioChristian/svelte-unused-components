@@ -38,6 +38,14 @@ func main() {
 	bench.Benchmark("Inverted normal", func() []string {
 		return inverted.FindUnusedNormal(svelte_files, *recursive)
 	})
+
+	bench.Benchmark("Inverted concurrent", func() []string {
+		return inverted.FindUnusedConcurrent(svelte_files, *recursive)
+	})
+
+	bench.Benchmark("Inverted workers", func() []string {
+		return inverted.FindUnusedWorkers(svelte_files, *recursive)
+	})
 	//
 	// benchmark("Semaforo dinamico (16)", func() map[string]bool {
 	// 	return IndicizzazioneConSemaforo(files, 16)
