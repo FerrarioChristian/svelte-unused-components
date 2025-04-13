@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"svelte-unused-components/bench"
 	"svelte-unused-components/bruteforce"
+	"svelte-unused-components/indexed"
 	"svelte-unused-components/inverted"
 	"svelte-unused-components/utils"
 )
@@ -45,6 +46,14 @@ func main() {
 
 	bench.Benchmark("Inverted workers", func() []string {
 		return inverted.FindUnusedWorkers(svelte_files, *recursive)
+	})
+
+	bench.Benchmark("Indexed normal", func() []string {
+		return indexed.FindUnusedNormal(svelte_files, *recursive)
+	})
+
+	bench.Benchmark("Indexed workers", func() []string {
+		return indexed.FindUnusedConcurrent(svelte_files, *recursive)
 	})
 	//
 	// benchmark("Semaforo dinamico (16)", func() map[string]bool {
