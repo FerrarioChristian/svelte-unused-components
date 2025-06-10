@@ -1,9 +1,11 @@
-package fileutils
+package utils
 
 import (
+	"bufio"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func GetSvelteFilesInDirecory(root string) []string {
@@ -46,4 +48,28 @@ func WriteResultsToFile(filename string, lines []string) {
 			panic(err)
 		}
 	}
+}
+
+func ReadFileLines(file string) []string {
+	var lines []string
+	f, err := os.Open(file)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "</script>") {
+			break
+		}
+		lines = append(lines, line)
+	}
+
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+
+	return lines
 }
