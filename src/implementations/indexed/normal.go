@@ -12,9 +12,9 @@ func buildFileContentIndex(files []string) map[string]string {
 	for _, file := range files {
 		content, err := os.ReadFile(file)
 		if err != nil {
-			continue
+			panic(err)
 		}
-		index[filepath.Base(file)] = string(content)
+		index[file] = string(content)
 	}
 	return index
 }
