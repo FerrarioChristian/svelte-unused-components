@@ -1,10 +1,10 @@
 package inverted
 
 import (
+	"github.com/FerrarioChristian/svelte-unused-components/internal/utils"
 	"path/filepath"
 	"slices"
 	"strings"
-	"svelte-unused-components/utils"
 )
 
 func getUnusedFilesRecursive(files []string) []string {

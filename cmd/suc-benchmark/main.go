@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"svelte-unused-components/benchmark/bench"
-	"svelte-unused-components/implementations/bruteforce"
-	"svelte-unused-components/implementations/indexed"
-	"svelte-unused-components/implementations/inverted"
-	"svelte-unused-components/utils"
+	"github.com/FerrarioChristian/svelte-unused-components/internal/bench"
+	"github.com/FerrarioChristian/svelte-unused-components/internal/implementations/bruteforce"
+	"github.com/FerrarioChristian/svelte-unused-components/internal/implementations/indexed"
+	"github.com/FerrarioChristian/svelte-unused-components/internal/implementations/inverted"
+	"github.com/FerrarioChristian/svelte-unused-components/internal/utils"
 )
 
 const Red = "\033[31m"

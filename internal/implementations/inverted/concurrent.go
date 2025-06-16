@@ -1,11 +1,11 @@
 package inverted
 
 import (
+	"github.com/FerrarioChristian/svelte-unused-components/internal/utils"
 	"path/filepath"
 	"runtime"
 	"slices"
 	"strings"
-	"svelte-unused-components/utils"
 	"sync"
 )
 
